@@ -170,34 +170,14 @@ class GeneSubunit(Gene):
 
 
 
-
-        # def AddExons(self, listitem):
-        #     self.Exons.append(listitem)
-        #
-        # def AddFutrs(self, listitem):
-        #     self.Futrs.append(listitem)
-        #
-        # def AddTutrs(self, listitem):
-        #     self.Tutrs.append(listitem)
-        #
-        # def GenerateIntron(self):
-        #     self.Exons.sort(key=lambda x: x[0])
-        #     tmp=[self.Exons[0]]
-        #     for element in self.Exons:
-        #
-        # def
-
-        # def classifyitems(listitems, Is):
-
-
 global genesubunitqueue, genesubunitqueuepoplist
 
 genesubunitqueue = [GeneSubunit(['linfake', 'linfake', 'gene', '-2', '-1'], 'NULL', 'NULL')]  # 有交集的基因队列
 genesubunitqueuepoplist = []
 
 
-def B_Search(length, pos, scaffold):  # 二分搜索法
-    start, end = 0, length
+def B_Search(pos: int, scaffold: str) -> int:  # 二分搜索法
+    start, end = 0, len(genomeDict[scaffold])
     cursor = (start + end) // 2
     while start != cursor:
         if genomeDict[scaffold][cursor].start > pos:
@@ -273,7 +253,7 @@ def IsFullLength(scaffold, start, end, part=False):
     IsContinue = True
     if scaffold in genomeDict:
         lens = len(genomeDict[scaffold])
-        idx = B_Search(lens, start, scaffold)
+        idx = B_Search(start, scaffold)
         while IsContinue and idx < lens:
             IsContinue, IsOverlap, IsOverAll = GffPatternDet(start, end, genomeDict[scaffold][idx])
             if IsOverlap:
@@ -407,6 +387,70 @@ def decodegtf(gtffilename):
         assert isinstance(val, list)
         val.sort(key=lambda x: x.start)  # 按照起始位点排序
 
+def classfynormaljunction(start,end,scaffold):
+    """
+    This function is to identify the normal junctions.and reture the results: three parameters
+     one is for how many gene does the junction span,one is for is this junction a canonical one or non-canonical and
+
+    :param start: int
+    :param end: int
+    :param scaffold: str
+    :return: far from several gene,is in gtf file?
+    """
+    startr=findgene(start,scaffold)
+    endr=findgene(end,scaffold)
+    if endr[0]<=startr[1]:
+        sidx=endr[0]
+        eidx=startr[1]
+        junction=1
+        for x in range(sidx,eidx+1):
+            for Isoform in genomeDict[scaffold][x].Isoforms:
+                for junctions in Isoform.Introns:
+                    if abs(start-junctions[0])<=1 and abs(end-junctions[1])<=1:
+                        junction=2
+                        break
+                break
+        return 0,junction
+    else:
+        sidx=startr[1]
+        eidx=endr[0]
+        junction=0
+    # if genomeDict[scaffold][sidx].end>=end:
+    #     junction=1
+    #     for x in range(sidx,eidx+1):
+    #         for Isoform in genomeDict[scaffold][x].Isoforms:
+    #             for junctions in Isoform.Introns:
+    #                 if abs(start-junctions[0])<=1 and abs(end-junctions[1])<=1:
+    #                     junction=2
+    #                     break
+    #             break
+    #     return abs(eidx-sidx),junction
+    # else:
+        return abs(eidx-sidx),junction
+
+def findgene(Pos,scaffold):
+    """
+    该函数用于查找
+    :param Pos:
+    :param scaffold:
+    :return:
+    """
+    idx=B_Search(Pos,scaffold)
+    idxs=idx-1
+    idxe=idx+1
+    while True:
+        if genomeDict[scaffold][idxs].end>=Pos:
+            idxs=idxs-1
+        else:
+            idxs=idxs+1
+            break
+    while True:
+        if genomeDict[scaffold][idxs].start<=Pos:
+            idxe=idxe+1
+        else:
+            idxe=idxe-1
+            break
+    return [idxs,idxe]
 
 def main():
     print("This is a Test!")
