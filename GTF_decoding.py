@@ -436,16 +436,17 @@ def findgene(Pos,scaffold):
     :return:
     """
     idx=B_Search(Pos,scaffold)
+    ranges=len(genomeDict[scaffold])
     idxs=idx-1
     idxe=idx+1
     while True:
-        if genomeDict[scaffold][idxs].end>=Pos:
+        if idxs>=0 and genomeDict[scaffold][idxs].end>=Pos:
             idxs=idxs-1
         else:
             idxs=idxs+1
             break
     while True:
-        if genomeDict[scaffold][idxs].start<=Pos:
+        if idxe<ranges and genomeDict[scaffold][idxe].start<=Pos :
             idxe=idxe+1
         else:
             idxe=idxe-1

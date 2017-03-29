@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # coding=utf-8
 """
 This scripts is for detect patterns of the transcription.
@@ -78,6 +79,25 @@ class Normaljunction:
         self.length[3]=len(self.transplicefa)
         return self.length
 
+    def parsertostring(self,junc,c='\t'):
+        assert isinstance(junc,Junction)
+        m=map(str,[junc.scaffold,junc.start,junc.end,junc.chain,junc.depth,junc.isnormal,junc.transspan])
+        string=c.join(m)
+        return string
+
+    def writejunction(self,prefix,postfix,listitem):
+        if not (prefix=="" or prefix==None):
+            prefix=prefix+"_"
+        with open(prefix+postfix+".txt",'w') as outfile:
+            for junc in listitem:
+                tmp=self.parsertostring(junc)
+                outfile.write(tmp+'\n')
+
+    def writetodisk(self,prefix):
+        self.writejunction(prefix,"normal",self.normaljucntion)
+        self.writejunction(prefix,"novel",self.noveljunction)
+        self.writejunction(prefix,"transad",self.transplicead)
+        self.writejunction(prefix,"transfa",self.transplicefa)
 
 class Fusionjunction(Junction):
     def __init__(self,listitem):
@@ -91,13 +111,13 @@ def _parse_args():
     """Parse the command line for options."""
     usage = 'usage: %prog -j JUNCTION -g FILE.gff3 -o OUTPREFIX'
     parser = optparse.OptionParser(usage)
-    # parser.add_option('-i',
-    #                   '--input', dest='input', type='string',
-    #                   help='input segment.out file ')
+    parser.add_option('-i',
+                      '--input', dest='input', type='string',
+                      help='input junction file ')
     #    parser.add_option('-f','--fpkm',dest='fpkm_file',type='string',help='input fpkm file')
     #    parser.add_option('-v','--variation', dest='variation', type='string', help='input variation information file')
     parser.add_option('-g', '--gtf', dest='gtf',type="string",default='', help='gtf file')
-    parser.add_option('-o', '--output', dest='output', type='string', help='output prefix')
+    parser.add_option('-o', '--output', dest='output', type='string',default='', help='output prefix')
     parser.add_option('-j','--junction',dest='junction',type='int',default=0,help='junction type, 0 is normal type,1 for fusion jucntions')
     options, args = parser.parse_args()
     # parser.print_help()
@@ -113,15 +133,16 @@ def options_hindler(options,parser):
         parser.print_help()
         raise ValueError("Input file is NULL")
 
-def normaljunction(filename,Njunction):
+def normaljunction(filename,prefix,Njunction,):
     with open(filename) as inputfile:
         for element in inputfile:
             element=element.strip()
             listitem=element.split('\t')
             junc=Junction(listitem)
-            flag,isnormal=GTF_decoding.classfynormaljunction(junc.start,junc.end,junc.scaffold)
+            flag,isnormal=GTF_decoding.classfynormaljunction(junc.start+1,junc.end+1,junc.scaffold)
             junc.istranscpliced(isnormal,flag)
             Njunction.addjunc(junc)
+        Njunction.writetodisk(prefix)
 
 
 if __name__ == '__main__':
@@ -131,5 +152,5 @@ if __name__ == '__main__':
     printinformations()
     GTF_decoding.decodegtf(options.gtf)
     if options.junction==0:
-        normaljunction(options.input,Njunction)
+        normaljunction(options.input,options.output,Njunction)
 
