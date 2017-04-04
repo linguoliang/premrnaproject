@@ -5,7 +5,7 @@ This scripts is for detect patterns of the transcription.
 
 """
 __author__ = 'Guoliang Lin'
-Softwarename = 'detect junctions in tophat'
+Softwarename = 'etect junctions in tophat'
 version = '0.0.1'
 bugfixs = ''
 __date__ = '2017-03-21'
@@ -14,9 +14,10 @@ import time
 import GTF_decoding
 
 def printinformations():
-    print("%s software version is %s in %s" % (Softwarename, version, __date__))
-    print(bugfixs)
-    print('Starts at :' + time.strftime('%Y-%m-%d %H:%M:%S'))
+    print("\t%s \n\tsoftware version is %s in %s" % (Softwarename, version, __date__))
+    print("\tAuthor:s%"%__author__)
+    print("\t%s"%bugfixs)
+    print('\tStart at :' + time.strftime('%Y-%m-%d %H:%M:%S'))
 class Junction:
     def __init__(self,listitem):
         self.scaffold=listitem[0]
@@ -133,7 +134,7 @@ def options_hindler(options,parser):
         parser.print_help()
         raise ValueError("Input file is NULL")
 
-def normaljunction(filename,prefix,Njunction,):
+def normaljunction(filename,prefix,Njunction):
     with open(filename) as inputfile:
         for element in inputfile:
             element=element.strip()
@@ -144,6 +145,8 @@ def normaljunction(filename,prefix,Njunction,):
             Njunction.addjunc(junc)
         Njunction.writetodisk(prefix)
 
+def fusionjunction(filename,prefix,Fjunction):
+
 
 if __name__ == '__main__':
     Njunction=Normaljunction()
@@ -153,4 +156,6 @@ if __name__ == '__main__':
     GTF_decoding.decodegtf(options.gtf)
     if options.junction==0:
         normaljunction(options.input,options.output,Njunction)
+    else:
+        fusionjunction(options.input,options.output,)
 
