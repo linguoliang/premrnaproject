@@ -100,9 +100,15 @@ class Normaljunction:
         self.writejunction(prefix,"transad",self.transplicead)
         self.writejunction(prefix,"transfa",self.transplicefa)
 
-class Fusionjunction(Junction):
+class Fusionjunction:
     def __init__(self,listitem):
-        Junction.__init__(self,listitem)
+        self.chrom1=listitem[1]
+        self.position1=int(listitem[2])
+        self.chain1=listitem[3]
+        self.chrom2=listitem[4]
+        self.position=int(listitem[5])
+        self.chain1=listitem[6]
+    
 
 
 def programends():
