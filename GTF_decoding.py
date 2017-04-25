@@ -9,9 +9,11 @@ import sys
 from functools import reduce
 import copy
 
-geneDict = {}
 genomeDict = {}
 
+class GeneList:
+    def __init__(self):
+        self.genomeDict={}
 
 def findgenebyname(genome, string): # 通过基因名寻找基因
     for lista in genome:
@@ -81,6 +83,7 @@ class Gene:
         self.scaffold = listitems[0]
         self.start = int(listitems[3])
         self.end = int(listitems[4])
+        self.strand= "."
         self.genename = geneId
         self.geneId = genename
 
@@ -172,7 +175,7 @@ class GeneSubunit(Gene):
 
 global genesubunitqueue, genesubunitqueuepoplist
 
-genesubunitqueue = [GeneSubunit(['linfake', 'linfake', 'gene', '-2', '-1'], 'NULL', 'NULL')]  # 有交集的基因队列
+genesubunitqueue = [GeneSubunit(['linfake', 'linfake', 'gene', '-2', '-1','.','.'], 'NULL', 'NULL')]  # 有交集的基因队列
 genesubunitqueuepoplist = []
 
 
@@ -273,7 +276,7 @@ def Creategene(listitems): # 创建基因实例 in decodegtf
     tmp = listitems[8].split(';')
     genename = tmp[2].split(' ')[2].replace('"', '')
     geneId = tmp[0].split(' ')[1].replace('"', '')
-    return GeneSubunit(listitems[0:5], genename, geneId)
+    return GeneSubunit(listitems[0:7], genename, geneId)
 
 
 def builtoverlabexon(genesubunitqueue, tmpgene):
@@ -313,10 +316,6 @@ def decodegtf(gtffilename):
                 # classifyitems(listitems)
                 if listitems[2] == 'gene':
                     tmpgene = Creategene(listitems)
-                # tmp = listitems[8].split(';')
-                #                    genename = tmp[2].split(' ')[2].replace('"', '')
-                #                    geneId = tmp[0].split(' ')[2].replace('"', '')
-                #                    tmpgene = GeneSubunit(listitems[0:5], genename,geneId)
                 break
 
         for item in gtffile:
@@ -327,24 +326,6 @@ def decodegtf(gtffilename):
                 if tmpgene.IsoformNum > 0:
                     tmpgene.Isoforms[-1].builtIntron()
                 if genesubunitqueue[-1].scaffold == tmpgene.scaffold:
-                    # for i in range(len(genesubunitqueue)):
-                    #     if genesubunitqueue[i].end<tmpgene.start:
-                    #         genesubunitqueuepoplist.append(i)
-                    #     else:
-                    #         for exon in genesubunitqueue[i].exon:  # 其他基因
-                    #             if tmpgene.start<=exon[0]<=exon[1]<= tmpgene.end or exon[0]<=tmpgene.start<=tmpgene.end<=exon[1]:
-                    #                 tmpgene.extraExon.append(exon)
-                    #             elif exon[0]<=tmpgene.start<=exon[1]<=tmpgene.end:
-                    #                 tmpgene.extraExon.append([tmpgene.start,exon[1]])
-                    #             elif tmpgene.start<=exon[0]<=tmpgene.end<=exon[1]:
-                    #                 tmpgene.extraExon.append([exon[0],tmpgene.end])
-                    #         for exon in tmpgene.exon:  # 其他基因
-                    #             if genesubunitqueue[i].start<=exon[0]<=exon[1]<= genesubunitqueue[i].end or exon[0]<=genesubunitqueue[i].start<=genesubunitqueue[i].end<=exon[1]:
-                    #                 genesubunitqueue[i].extraExon.append(exon)
-                    #             elif exon[0]<=genesubunitqueue[i].start<=exon[1]<=genesubunitqueue[i].end:
-                    #                 genesubunitqueue[i].extraExon.append([genesubunitqueue[i].start,exon[1]])
-                    #             elif genesubunitqueue[i].start<=exon[0]<=genesubunitqueue[i].end<=exon[1]:
-                    #                 genesubunitqueue[i].extraExon.append([exon[0],genesubunitqueue[i].end])
                     builtoverlabexon(genesubunitqueue, tmpgene)
                     while genesubunitqueuepoplist:
                         inputgene = genesubunitqueue.pop(genesubunitqueuepoplist.pop())
@@ -368,15 +349,7 @@ def decodegtf(gtffilename):
                             genomeDict[inputgene.scaffold] = [inputgene]
                         inputgene = genesubunitqueue.pop()
                     genesubunitqueue = [tmpgene]
-                # tmpgene.builtsuperIsoform()
-                # if tmpgene != None and genomeDict.has_key(tmpgene.scaffold):
-                #     genomeDict[tmpgene.scaffold].append(tmpgene)
-                # elif tmpgene != None:
-                #     genomeDict[tmpgene.scaffold] = [tmpgene]
                 tmpgene = Creategene(listitems)
-                # tmp = listitems[8].split(';')
-                # genename = tmp[2].split(' ')[2].replace('"', '')
-                # tmpgene = GeneSubunit(listitems[0:5], genename)
             elif listitems[2] == 'transcript':
                 if tmpgene.IsoformNum > 0:
                     tmpgene.Isoforms[-1].builtIntron()
@@ -415,17 +388,6 @@ def classfynormaljunction(start,end,scaffold):
         sidx=startr[1]
         eidx=endr[0]
         junction=0
-    # if genomeDict[scaffold][sidx].end>=end:
-    #     junction=1
-    #     for x in range(sidx,eidx+1):
-    #         for Isoform in genomeDict[scaffold][x].Isoforms:
-    #             for junctions in Isoform.Introns:
-    #                 if abs(start-junctions[0])<=1 and abs(end-junctions[1])<=1:
-    #                     junction=2
-    #                     break
-    #             break
-    #     return abs(eidx-sidx),junction
-    # else:
         return abs(eidx-sidx),junction
 
 def findgene(Pos,scaffold):
