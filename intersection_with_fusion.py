@@ -18,9 +18,10 @@ def combineGenerator(list1):
     # 生成所有组合
     listr = []
     listr.append('_'.join(list1[0:4]))
+    listr.append('_'.join([list1[2], list1[3], list1[0], list1[1]]))
     listr.append('_'.join([list1[0], str(int(list1[1]) + 2), list1[2], list1[3]]))
     listr.append('_'.join([list1[0], list1[1], list1[2], str(int(list1[3]) + 2)]))
-    if listr[0] == listr[2]:
+    if list1[0] == list1[2]:
         listr.append('_'.join([list1[0], list1[3], list1[2], str(int(list1[1]) + 2)]))
         listr.append('_'.join([list1[0], str(int(list1[3]) + 2), list1[2], list1[1]]))
     return listr
