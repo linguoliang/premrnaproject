@@ -38,25 +38,28 @@ class Isoform: # isoform 类
         self.IsoformDict[listitem[2]] = [listitem[3:5]] #注意string
         self.Introns = [] # int
         self.exonNum = 1
+        self.fpkm=[]
 
     def addmore(self, listitem):
         if listitem[2] in self.IsoformDict:
             self.IsoformDict[listitem[2]].append(listitem[3:5])
         else:
             self.IsoformDict[listitem[2]] = [listitem[3:5]]
+        if listitem[2]=='exon':
+            tmp = listitem[8].split(';')
+            fpkmk = float(tmp[2].split(' ')[2].replace('"', ''))
+            self.fpkm.append(fpkmk)
+
+
 
     def builtIntron(self):
-        # if self.IsoformDict.has_key("UTR"):
-        #     self.Introns.extend(self.IsoformDict["UTR"])
         self.Introns.extend(copy.deepcopy(self.IsoformDict["exon"]))
         self.Introns.sort(key=lambda x: int(x[0]))
 
         self.Introns = reduce(union, self.Introns)
         self.Introns = [int(x) for x in self.Introns if True]
-        #        self.Introns.insert(0, int(self.IsoformDict["transcript"][0][0]))
         self.Introns.insert(0, int(
             min(reduce(lambda x, y: [1000, min(int(x[0]), int(y[0]))], self.IsoformDict["transcript"]))))
-        #        self.Introns.append(int(self.IsoformDict["transcript"][0][1]))
         self.Introns.append(
             int(max(reduce(lambda x, y: [0, max(int(x[1]), int(y[1]))], self.IsoformDict["transcript"]))))
         self.Introns = [[self.Introns[2 * i] + 1, self.Introns[2 * i + 1] - 1] for i in range(len(self.Introns) // 2)]
@@ -74,18 +77,18 @@ class Gene:
     用来存储基因的信息，包括基因名，scaffold,以及起始和终止位点
     """
 
-    def __init__(self, listitems, genename, geneId):
+    def __init__(self, listitems, fpkm, geneId):
         """
         init values
         """
         assert isinstance(listitems, list)
-        assert isinstance(genename, str)
+        assert isinstance(fpkm, str)
         self.scaffold = listitems[0]
         self.start = int(listitems[3])
         self.end = int(listitems[4])
         self.strand= "."
-        self.genename = geneId
-        self.geneId = genename
+        self.fpkm = fpkm
+        self.geneId = geneId
 
 
 class GeneSubunit(Gene):
@@ -93,12 +96,12 @@ class GeneSubunit(Gene):
     用来存储gene的亚结构，外显子，内含子，utr等结构
     """
 
-    def __init__(self, listitems, genename, geneId):
+    def __init__(self, listitems, fpkm, geneId):
         """
         init values
         Exon Intron
         """
-        Gene.__init__(self, listitems, genename, geneId)
+        Gene.__init__(self, listitems, fpkm, geneId)
         self.Isoforms = []
         self.exon = []
         self.IsoformNum = 0
@@ -169,7 +172,7 @@ class GeneSubunit(Gene):
                 if tmpj  in self.junction:
                     pass
                 else:
-                    self.junction=None
+                    self.junction[tmpj]=None
 
 
 
@@ -250,33 +253,33 @@ def GffPatternDet(start, end, gene): # for full length
 
 
 # 如果是返回
-def IsFullLength(scaffold, start, end, part=False):
-    genelist = []
-    fulllen = []
-    IsContinue = True
-    if scaffold in genomeDict:
-        lens = len(genomeDict[scaffold])
-        idx = B_Search(start, scaffold)
-        while IsContinue and idx < lens:
-            IsContinue, IsOverlap, IsOverAll = GffPatternDet(start, end, genomeDict[scaffold][idx])
-            if IsOverlap:
-                genelist.append(genomeDict[scaffold][idx].genename)
-                fulllen.append(IsOverAll)
-            idx += 1
-        if len(genelist) == 0:
-            genelist.append("intergenic")
-            fulllen.append(0)
-        return genelist, fulllen
-    else:
-        print("%s scaffold information not in Gff file!", scaffold)
-        return None, None
+# def IsFullLength(scaffold, start, end, part=False):
+#     genelist = []
+#     fulllen = []
+#     IsContinue = True
+#     if scaffold in genomeDict:
+#         lens = len(genomeDict[scaffold])
+#         idx = B_Search(start, scaffold)
+#         while IsContinue and idx < lens:
+#             IsContinue, IsOverlap, IsOverAll = GffPatternDet(start, end, genomeDict[scaffold][idx])
+#             if IsOverlap:
+#                 genelist.append(genomeDict[scaffold][idx].genename)
+#                 fulllen.append(IsOverAll)
+#             idx += 1
+#         if len(genelist) == 0:
+#             genelist.append("intergenic")
+#             fulllen.append(0)
+#         return genelist, fulllen
+#     else:
+#         print("%s scaffold information not in Gff file!", scaffold)
+#         return None, None
 
 
 def Creategene(listitems): # 创建基因实例 in decodegtf
     tmp = listitems[8].split(';')
-    genename = tmp[2].split(' ')[2].replace('"', '')
+    fpkm = tmp[2].split(' ')[2].replace('"', '')
     geneId = tmp[0].split(' ')[1].replace('"', '')
-    return GeneSubunit(listitems[0:7], genename, geneId)
+    return GeneSubunit(listitems[0:7], fpkm, geneId)
 
 
 def builtoverlabexon(genesubunitqueue, tmpgene):
@@ -311,17 +314,19 @@ def decodegtf(gtffilename):
     with open(gtffilename) as gtffile:
         tmpgene = None
         for item in gtffile:
-            if item.find("#") != 0:
-                listitems = item.split("\t")
-                # classifyitems(listitems)
-                if listitems[2] == 'gene':
-                    tmpgene = Creategene(listitems)
-                break
+            listitems = item.split("\t")
+            tmp = listitems[8].split(';')
+# classifyitems(listitems)
+            geneId = tmp[0].split(' ')[1].replace('"', '')
+            tmpgene = Creategene(listitems)
+            break
 
         for item in gtffile:
             listitems = item.split("\t")
+            tmp = listitems[8].split(';')
             # classifyitems(listitems)
-            if listitems[2] == 'gene':
+            geneId2 = tmp[0].split(' ')[1].replace('"', '')
+            if geneId != geneId2:
                 tmpgene.builtsuperexon()
                 if tmpgene.IsoformNum > 0:
                     tmpgene.Isoforms[-1].builtIntron()
@@ -339,7 +344,6 @@ def decodegtf(gtffilename):
                 else:
                     inputgene = genesubunitqueue.pop()
                     while genesubunitqueue:
-                        # inputgene=genesubunitqueue.pop()
                         builtoverlabexon(genesubunitqueue, inputgene)
                         if inputgene != None and (inputgene.scaffold in genomeDict):
                             inputgene.builtsuperIsoform()
@@ -350,6 +354,10 @@ def decodegtf(gtffilename):
                         inputgene = genesubunitqueue.pop()
                     genesubunitqueue = [tmpgene]
                 tmpgene = Creategene(listitems)
+                if tmpgene.IsoformNum > 0:
+                    tmpgene.Isoforms[-1].builtIntron()
+                tmpgene.AddIsoform(listitems)
+                geneId=geneId2
             elif listitems[2] == 'transcript':
                 if tmpgene.IsoformNum > 0:
                     tmpgene.Isoforms[-1].builtIntron()
