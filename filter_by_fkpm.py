@@ -37,5 +37,13 @@ def _parse_args():
 
 if __name__ == '__main__':
     options=_parse_args()
-    with open(options.input) as inpufile:
-        for filelist in inpufile:
+    with open(options.input,'r') as inputfile:
+        with open(options.output,'w') as outfile:
+            for item in inputfile:
+                assert isinstance(item,str)
+                listitems=item.split('\t')
+                if listitems[2]=='exon':
+                    tmp = listitems[8].split(';')
+                    fpkm = float(tmp[2].split(' ')[2].replace('"', ''))
+                    if fpkm >=0.3:
+                        outfile.write(item)

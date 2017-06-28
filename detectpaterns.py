@@ -146,7 +146,7 @@ def normaljunction(filename,prefix,Njunction):
         Njunction.writetodisk(prefix)
 
 def fusionjunction(filename,prefix,Fjunction):
-
+    pass
 
 if __name__ == '__main__':
     Njunction=Normaljunction()
@@ -157,5 +157,5 @@ if __name__ == '__main__':
     if options.junction==0:
         normaljunction(options.input,options.output,Njunction)
     else:
-        fusionjunction(options.input,options.output,)
+        fusionjunction(options.input,options.output,Njunction)
 
