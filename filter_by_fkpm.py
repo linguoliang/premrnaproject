@@ -44,6 +44,6 @@ if __name__ == '__main__':
                 listitems=item.split('\t')
                 if listitems[2]=='exon':
                     tmp = listitems[8].split(';')
-                    fpkm = float(tmp[2].split(' ')[2].replace('"', ''))
+                    fpkm = float(tmp[3].split(' ')[2].replace('"', ''))
                     if fpkm >=0.3:
                         outfile.write(item)
