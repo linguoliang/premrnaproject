@@ -17,4 +17,8 @@ with open(sys.argv[1]) as inputfile:
             overhang=int(tmp[8])
             depth= int(tmp[6])
             if depth >=pre_depth and overhang >= pre_overhang :
-                outfile.write(element)
+                if tmp[3]=='1':
+                    string='\t'.join([tmp[0],tmp[1],tmp[2],'+',tmp[6]])
+                else:
+                    string='\t'.join([tmp[0],tmp[1],tmp[2],'-',tmp[6]])
+                outfile.write(string+'\n')

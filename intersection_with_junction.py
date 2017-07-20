@@ -25,17 +25,11 @@ with open(sys.argv[1],'r') as tophat:
                     dict1[tmp[0]+str(int(tmp[1])+2)+tmp[2]+tmp[3]]=item
                 for item in star1:
                     tmp = item.split('\t')
-                    if int(tmp[3])==1:
-                        tmp[3]="+"
-                    else: tmp[3]="-"
                     di=tmp[0]+tmp[1]+tmp[2]+tmp[3]
                     if di in dict1:
                         dict2[di]=dict1[di]
                 for item in star2:
                     tmp = item.split('\t')
-                    if int(tmp[3])==1:
-                        tmp[3]="+"
-                    else: tmp[3]="-"
                     di=tmp[0]+tmp[1]+tmp[2]+tmp[3]
                     if di in dict2:
                         dict3[di]=dict2[di]

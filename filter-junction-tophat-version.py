@@ -1,7 +1,7 @@
 #!/bin/env python3
 # coding=utf-8
 # this file is for filtering junction from tophat junction.bed 
-# The junction will be filter when the scores is less than 1 and the overhang is less than 20
+# The junction will be filter when the scores is less than 3 and the overhang is less than 20
 import sys
 
 with open(sys.argv[1]) as inputfile:
@@ -13,4 +13,4 @@ with open(sys.argv[1]) as inputfile:
             overhangleft=int(tmp[10].split(',')[0])
             overhangright=int(tmp[10].split(',')[1])
             if depth >=3 and overhangleft>=20 and overhangright>=20:
-                outfile.write(element)
+                outfile.write("\t".join([tmp[0],tmp[1],tmp[2],tmp[5],tmp[4]])+'\n')
